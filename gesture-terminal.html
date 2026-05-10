@@ -832,8 +832,8 @@
                 0 0 18px rgba(120, 220, 255, 0.06);
         }
 
+        /* 勿用 position:relative 覆盖 .tarot-face 的 absolute+inset：否则仅有绝对定位子元素时正面高度塌为 0，牌面图不可见 */
         .tarot-front {
-            position: relative;
             transform: rotateY(180deg);
             background:
                 radial-gradient(ellipse 120% 120% at 50% -30%, rgba(180, 220, 255, 0.55) 0%, transparent 56%),
