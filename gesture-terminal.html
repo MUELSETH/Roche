@@ -537,13 +537,15 @@
 
         /* ----------------------- Tarot 抽牌 UI ----------------------- */
         .tarot-stage-wrap {
-            margin-top: 0.8rem;
+            margin-top: 0;
             position: relative;
             border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.10);
             background: rgba(0, 0, 0, 0.18);
             overflow: hidden;
-            height: clamp(560px, 74vh, 900px);
+            height: clamp(600px, 78vh, 940px);
+            flex: 1 1 62%;
+            min-width: 0;
         }
         /* 巫术×终端：舞台扫描/符文 HUD（不阻挡交互） */
         .tarot-stage-wrap::before {
@@ -704,29 +706,55 @@
             pointer-events: none;
         }
 
-        /* 翻面后显示的卡牌信息条（舞台下方：左=名称/正逆位；右=释义/关键词） */
+        /* 舞台 + 释义侧栏（宽屏并排，避免压在牌面上） */
+        .tarot-desk {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            min-height: 0;
+        }
+        /* 翻面后：名称/释义显示在舞台右侧（窄屏在舞台下方） */
         .tarot-info-bar {
-            margin-top: 0.85rem;
-            display: grid;
-            grid-template-columns: 1fr 1.25fr;
-            gap: 0.75rem;
-            align-items: start;
-            padding: 0.75rem 0.85rem;
+            flex: 0 0 min(288px, 34%);
+            max-width: 340px;
+            margin-top: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            align-items: stretch;
+            padding: 0.85rem 0.95rem;
             border-radius: 16px;
             border: 1px solid rgba(127, 232, 255, 0.16);
-            background: rgba(0, 6, 18, 0.22);
+            background: rgba(0, 6, 18, 0.28);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
             opacity: 0;
-            transform: translateY(6px);
-            transition: opacity 220ms ease, transform 220ms ease;
+            transform: translateX(8px);
+            transition: opacity 240ms ease, transform 240ms ease;
+            align-self: stretch;
+        }
+        @media (max-width: 900px) {
+            .tarot-desk { flex-direction: column; }
+            .tarot-stage-wrap { flex: 1 1 auto; width: 100%; }
+            .tarot-info-bar {
+                flex: 0 0 auto;
+                max-width: none;
+                width: 100%;
+                transform: translateY(6px);
+            }
         }
         .tarot-info-bar.is-visible {
             opacity: 1;
-            transform: translateY(0);
+            transform: none;
         }
         .tarot-info-left,
         .tarot-info-right {
             min-width: 0;
+        }
+        .tarot-info-left {
+            padding-bottom: 0.65rem;
+            border-bottom: 1px solid rgba(127, 232, 255, 0.12);
         }
         .tarot-info-kicker {
             font-family: ui-monospace, 'Cascadia Code', 'Consolas', 'SFMono-Regular', monospace;
@@ -759,12 +787,6 @@
             line-height: 1.55;
             word-break: break-word;
         }
-        @media (max-width: 720px) {
-            .tarot-info-bar {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .tarot-card {
             position: absolute;
             left: 0;
@@ -795,41 +817,68 @@
         }
         .tarot-back {
             transform: rotateY(0deg);
-            /* Frutiger Aero：简约玻璃感 + 柔和青蓝气泡 */
+            /* 复古纸牌背：深酒红/旧金 + 织纹 + 外发光（整体替换） */
             background:
-                radial-gradient(ellipse 120% 110% at 50% -35%, rgba(210, 245, 255, 0.55) 0%, rgba(120, 205, 255, 0.14) 40%, transparent 68%),
-                radial-gradient(ellipse 80% 70% at 20% 20%, rgba(120, 235, 255, 0.16) 0%, transparent 58%),
-                radial-gradient(ellipse 70% 60% at 82% 78%, rgba(160, 205, 255, 0.12) 0%, transparent 60%),
-                linear-gradient(180deg, rgba(14, 22, 44, 0.86) 0%, rgba(7, 10, 22, 0.96) 100%);
+                radial-gradient(ellipse 95% 55% at 50% 8%, rgba(255, 210, 140, 0.22) 0%, transparent 52%),
+                radial-gradient(ellipse 70% 50% at 50% 100%, rgba(120, 40, 30, 0.35) 0%, transparent 48%),
+                radial-gradient(circle at 50% 46%, rgba(40, 18, 14, 0.55) 0%, rgba(26, 10, 8, 0.2) 52%, transparent 78%),
+                linear-gradient(168deg, #120807 0%, #2a1410 28%, #1a0d0a 55%, #0c0504 100%);
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 200, 120, 0.14),
+                inset 0 -18px 36px rgba(0, 0, 0, 0.42),
+                0 0 22px rgba(255, 170, 90, 0.22),
+                0 0 48px rgba(200, 90, 40, 0.12);
+            animation: tarotBackGlowPulse 3.8s ease-in-out infinite;
+        }
+        @keyframes tarotBackGlowPulse {
+            0%, 100% {
+                box-shadow:
+                    inset 0 0 0 1px rgba(255, 200, 120, 0.12),
+                    inset 0 -18px 36px rgba(0, 0, 0, 0.42),
+                    0 0 18px rgba(255, 170, 90, 0.16),
+                    0 0 40px rgba(200, 90, 40, 0.08);
+            }
+            50% {
+                box-shadow:
+                    inset 0 0 0 1px rgba(255, 220, 150, 0.22),
+                    inset 0 -18px 36px rgba(0, 0, 0, 0.38),
+                    0 0 28px rgba(255, 195, 110, 0.32),
+                    0 0 64px rgba(220, 120, 60, 0.18);
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .tarot-back { animation: none; }
         }
         .tarot-back::before {
             content: "";
             position: absolute;
             inset: 0;
-            /* 简约“气泡”与轻微纹理：不做密集斜纹 */
+            border-radius: inherit;
+            pointer-events: none;
             background:
-                /* 平面构成线稿（居中圆环/月牙 + 对称延展实线/虚线），银箔感描边 */
-                url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A//www.w3.org/2000/svg'%20viewBox%3D'0%200%20200%20300'%3E%3Cdefs%3E%3ClinearGradient%20id%3D'g'%20x1%3D'0'%20y1%3D'0'%20x2%3D'1'%20y2%3D'1'%3E%3Cstop%20offset%3D'0'%20stop-color%3D'rgba(255%2C255%2C255%2C0.82)'/%3E%3Cstop%20offset%3D'0.5'%20stop-color%3D'rgba(190%2C230%2C255%2C0.62)'/%3E%3Cstop%20offset%3D'1'%20stop-color%3D'rgba(255%2C255%2C255%2C0.78)'/%3E%3C/linearGradient%3E%3Cfilter%20id%3D's'%20x%3D'-20%25'%20y%3D'-20%25'%20width%3D'140%25'%20height%3D'140%25'%3E%3CfeGaussianBlur%20stdDeviation%3D'0.7'%20result%3D'b'%3E%3C/feGaussianBlur%3E%3CfeColorMatrix%20in%3D'b'%20type%3D'matrix'%20values%3D'0%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%200.20%200'%20result%3D'c'/%3E%3CfeMerge%3E%3CfeMergeNode%20in%3D'c'/%3E%3CfeMergeNode%20in%3D'SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg%20fill%3D'none'%20stroke%3D'url(%23g)'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%20filter%3D'url(%23s)'%3E%3Ccircle%20cx%3D'100'%20cy%3D'150'%20r%3D'44'%20stroke-width%3D'1.6'/%3E%3Ccircle%20cx%3D'100'%20cy%3D'150'%20r%3D'30'%20stroke-width%3D'1'%20opacity%3D'0.55'/%3E%3Cpath%20d%3D'M112%20150%20a18%2018%200%201%200%20-26%2014%20a14%2014%200%201%201%2026%20-14z'%20stroke-width%3D'1.55'/%3E%3Cline%20x1%3D'30'%20y1%3D'150'%20x2%3D'62'%20y2%3D'150'%20stroke-width%3D'1.6'/%3E%3Cline%20x1%3D'138'%20y1%3D'150'%20x2%3D'170'%20y2%3D'150'%20stroke-width%3D'1.6'/%3E%3Cline%20x1%3D'100'%20y1%3D'70'%20x2%3D'100'%20y2%3D'106'%20stroke-width%3D'1.6'/%3E%3Cline%20x1%3D'100'%20y1%3D'194'%20x2%3D'100'%20y2%3D'230'%20stroke-width%3D'1.6'/%3E%3Cpath%20d%3D'M46%20112%20H154'%20stroke-width%3D'1'%20opacity%3D'0.55'%20stroke-dasharray%3D'6%206'/%3E%3Cpath%20d%3D'M46%20188%20H154'%20stroke-width%3D'1'%20opacity%3D'0.55'%20stroke-dasharray%3D'6%206'/%3E%3Cpath%20d%3D'M58%20128%20H142'%20stroke-width%3D'1'%20opacity%3D'0.35'%20stroke-dasharray%3D'2%206'/%3E%3Cpath%20d%3D'M58%20172%20H142'%20stroke-width%3D'1'%20opacity%3D'0.35'%20stroke-dasharray%3D'2%206'/%3E%3Ccircle%20cx%3D'30'%20cy%3D'150'%20r%3D'2.2'%20stroke-width%3D'1.2'/%3E%3Ccircle%20cx%3D'170'%20cy%3D'150'%20r%3D'2.2'%20stroke-width%3D'1.2'/%3E%3Ccircle%20cx%3D'100'%20cy%3D'70'%20r%3D'2.2'%20stroke-width%3D'1.2'/%3E%3Ccircle%20cx%3D'100'%20cy%3D'230'%20r%3D'2.2'%20stroke-width%3D'1.2'/%3E%3Cpath%20d%3D'M42%20150%20l8%20-5%20l8%205%20l8%20-5%20l8%205'%20stroke-width%3D'1'%20opacity%3D'0.28'%3E%3C/path%3E%3Cpath%20d%3D'M158%20150%20l-8%20-5%20l-8%205%20l-8%20-5%20l-8%205'%20stroke-width%3D'1'%20opacity%3D'0.28'%3E%3C/path%3E%3C/g%3E%3C/svg%3E"),
-                radial-gradient(circle at 22% 28%, rgba(235, 252, 255, 0.22) 0%, rgba(235, 252, 255, 0.10) 18%, transparent 40%),
-                radial-gradient(circle at 72% 22%, rgba(180, 245, 255, 0.16) 0%, rgba(180, 245, 255, 0.08) 16%, transparent 38%),
-                radial-gradient(circle at 78% 72%, rgba(200, 220, 255, 0.14) 0%, rgba(200, 220, 255, 0.06) 18%, transparent 44%),
-                radial-gradient(circle at 34% 78%, rgba(150, 230, 255, 0.12) 0%, rgba(150, 230, 255, 0.05) 16%, transparent 40%),
-                linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.00) 45%, rgba(0, 0, 0, 0.14) 100%);
-            opacity: 0.95;
-            mix-blend-mode: screen;
-            background-repeat: no-repeat;
-            background-size: 100% 100%, auto, auto, auto, auto, auto, auto;
+                /* 细织纹 + 旧纸噪点感 */
+                repeating-linear-gradient(0deg, rgba(255, 215, 160, 0.045) 0px, transparent 1px, transparent 4px),
+                repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.06) 0px, transparent 1px, transparent 5px),
+                repeating-linear-gradient(-8deg, rgba(255, 255, 255, 0.02) 0px, transparent 2px, transparent 9px),
+                /* 对称复古纹样（线描玫瑰/罗盘简化） */
+                url("data:image/svg+xml,%3Csvg%20xmlns%3D'http://www.w3.org/2000/svg'%20viewBox%3D'0%200%20200%20300'%3E%3Cdefs%3E%3ClinearGradient%20id%3D'g'%20x1%3D'0%25'%20y1%3D'0%25'%20x2%3D'100%25'%20y2%3D'100%25'%3E%3Cstop%20offset%3D'0%25'%20stop-color%3D'%23e8c48a'/%3E%3Cstop%20offset%3D'50%25'%20stop-color%3D'%23c9a060'/%3E%3Cstop%20offset%3D'100%25'%20stop-color%3D'%23a67c3d'/%3E%3C/linearGradient%3E%3Cfilter%20id%3D's'%3E%3CfeGaussianBlur%20stdDeviation%3D'0.6'%20result%3D'b'/%3E%3CfeMerge%3E%3CfeMergeNode%20in%3D'b'/%3E%3CfeMergeNode%20in%3D'SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg%20fill%3D'none'%20stroke%3D'url(%23g)'%20stroke-width%3D'1.15'%20stroke-linecap%3D'round'%20filter%3D'url(%23s)'%20opacity%3D'0.88'%3E%3Crect%20x%3D'18'%20y%3D'28'%20width%3D'164'%20height%3D'244'%20rx%3D'10'%20opacity%3D'0.35'/%3E%3Cpath%20d%3D'M100%2056%20L108%2088%20L142%2092%20L116%20114%20L124%20148%20L100%20130%20L76%20148%20L84%20114%20L58%2092%20L92%2088%20Z'%20opacity%3D'0.9'/%3E%3Ccircle%20cx%3D'100'%20cy%3D'150'%20r%3D'38'%20opacity%3D'0.55'/%3E%3Ccircle%20cx%3D'100'%20cy%3D'150'%20r%3D'22'%20opacity%3D'0.45'/%3E%3Cpath%20d%3D'M100%20128%20c12%2018%2024%2036%200%2054%20c-24-18-12-36%200-54z'%20opacity%3D'0.5'/%3E%3Cpath%20d%3D'M100%2042%20v18M100%20240%20v18M42%20150%20h18M140%20150%20h18'%20opacity%3D'0.4'/%3E%3Cpath%20d%3D'M54%2078%20l14%2014M132%2078%20l-14%2014M54%20222%20l14-14M132%20222%20l-14-14'%20opacity%3D'0.35'/%3E%3C/g%3E%3C/svg%3E"),
+                radial-gradient(ellipse 55% 40% at 50% 48%, rgba(255, 200, 120, 0.08) 0%, transparent 70%);
+            background-repeat: repeat, repeat, repeat, no-repeat, no-repeat;
+            background-size: auto, auto, auto, 100% 100%, auto;
+            mix-blend-mode: soft-light;
+            opacity: 0.94;
         }
         .tarot-back::after {
             content: "";
             position: absolute;
-            inset: 16px;
+            inset: 12px;
             border-radius: 12px;
-            border: 1px solid rgba(160, 235, 255, 0.20);
+            border: 1px solid rgba(212, 165, 90, 0.35);
             box-shadow:
-                inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-                inset 0 10px 18px rgba(255, 255, 255, 0.04),
-                0 0 18px rgba(120, 220, 255, 0.06);
+                inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+                inset 0 0 24px rgba(255, 200, 120, 0.06),
+                0 0 20px rgba(255, 180, 100, 0.12);
+            pointer-events: none;
         }
 
         /* 勿用 position:relative 覆盖 .tarot-face 的 absolute+inset：否则仅有绝对定位子元素时正面高度塌为 0，牌面图不可见 */
@@ -905,43 +954,6 @@
             text-transform: uppercase;
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
             pointer-events: none;
-        }
-        .tarot-meaning {
-            position: absolute;
-            left: 12px;
-            right: 12px;
-            bottom: 12px;
-            z-index: 7;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            background: rgba(0, 10, 24, 0.54);
-            -webkit-backdrop-filter: blur(10px) saturate(1.08);
-            backdrop-filter: blur(10px) saturate(1.08);
-            padding: 8px 10px;
-            color: rgba(234, 241, 255, 0.95);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            opacity: 0;
-            transform: translateY(4px);
-            transition: opacity 220ms ease, transform 220ms ease;
-            pointer-events: none;
-        }
-        .tarot-meaning.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .tarot-meaning-title {
-            font-family: ui-monospace, 'Cascadia Code', 'Consolas', 'SFMono-Regular', monospace;
-            font-size: 0.68rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: rgba(234, 241, 255, 0.96);
-            line-height: 1.35;
-        }
-        .tarot-meaning-text {
-            margin-top: 4px;
-            font-size: 0.72rem;
-            color: rgba(186, 220, 255, 0.92);
-            line-height: 1.45;
         }
         @keyframes tarotGlossSweep {
             0% { transform: translateX(-40%); opacity: 0.35; }
@@ -1214,31 +1226,33 @@
     <div class="gesture-grid">
 
         <div class="card card-tarot-fullscreen">
-            <div class="tarot-stage-wrap">
-                <div id="tarotStage" class="tarot-stage" aria-label="塔罗牌抽取区域"></div>
-                <canvas id="tarotParticles" class="tarot-particles" aria-hidden="true"></canvas>
-                <div class="ritual-hud" aria-hidden="true">
-                    <div class="ritual-scanline"></div>
-                    <div class="ritual-corners"></div>
-                    <div class="ritual-statusbar">
-                        <div class="left">
-                            <span class="ritual-glyph"></span>
-                            <span class="ritual-status-text" id="ritualStatusText">RITUAL: STANDBY</span>
+            <div class="tarot-desk">
+                <div class="tarot-stage-wrap">
+                    <div id="tarotStage" class="tarot-stage" aria-label="塔罗牌抽取区域"></div>
+                    <canvas id="tarotParticles" class="tarot-particles" aria-hidden="true"></canvas>
+                    <div class="ritual-hud" aria-hidden="true">
+                        <div class="ritual-scanline"></div>
+                        <div class="ritual-corners"></div>
+                        <div class="ritual-statusbar">
+                            <div class="left">
+                                <span class="ritual-glyph"></span>
+                                <span class="ritual-status-text" id="ritualStatusText">RITUAL: STANDBY</span>
+                            </div>
+                            <span class="ritual-right">SIGIL v0.9</span>
                         </div>
-                        <span class="ritual-right">SIGIL v0.9</span>
                     </div>
                 </div>
-            </div>
-            <div id="tarotInfoBar" class="tarot-info-bar" aria-live="polite">
-                <div class="tarot-info-left">
-                    <div class="tarot-info-kicker">CARD</div>
-                    <div id="tarotInfoTitle" class="tarot-info-title">--</div>
-                </div>
-                <div class="tarot-info-right">
-                    <div class="tarot-info-kicker">MEANING</div>
-                    <div id="tarotInfoBrief" class="tarot-info-brief">--</div>
-                    <div id="tarotInfoKeywords" class="tarot-info-keywords"></div>
-                </div>
+                <aside id="tarotInfoBar" class="tarot-info-bar" aria-live="polite" aria-label="抽牌结果">
+                    <div class="tarot-info-left">
+                        <div class="tarot-info-kicker">CARD</div>
+                        <div id="tarotInfoTitle" class="tarot-info-title">--</div>
+                    </div>
+                    <div class="tarot-info-right">
+                        <div class="tarot-info-kicker">MEANING</div>
+                        <div id="tarotInfoBrief" class="tarot-info-brief">--</div>
+                        <div id="tarotInfoKeywords" class="tarot-info-keywords"></div>
+                    </div>
+                </aside>
             </div>
             <div class="archive-actions">
                 <button class="nav-btn primary-btn" id="openSelectedBtn" type="button">开始抽牌</button>
@@ -1329,9 +1343,9 @@
         </div>
         <div class="archive-modal-body">
             <pre id="usageModalContent" class="archive-modal-pre">留言：
-我猜你应该是对它感兴趣，姑且还是写了一下使用须知。
+我猜你可能会对它感兴趣，姑且还是写了一下使用须知。
 
-五指张开散牌并洗牌，握拳选中牌，伸出食指并单指晃动翻到正面，显现抽到的牌。
+五指张开洗牌：牌在下方以半圆扇形（或一字排开）铺开并轻微滑动；握拳选中牌，伸出食指并单指晃动翻到正面，显现抽到的牌。
 
 <em>这个真的不太好控制，暂且是个beta版吧。</em></pre>
         </div>
@@ -1641,6 +1655,8 @@
     ];
 
     const TAROT_CARD_FACE_COUNT = TAROT_CARDS.length;
+    /** 洗牌展开：'fan' 底部半圆扇形 + 轻微滑动；'row' 一字横排 */
+    const TAROT_SPREAD_STYLE = 'fan';
     let tarotActive = false;
     let tarotState = 'stacked'; // stacked | shuffling | picked_faceDown | faceUp | returning
     let tarotCards = [];
@@ -2024,6 +2040,38 @@
         return a + (b - a) * t;
     }
 
+    /** 扇形 pivot：舞台底部略上，弧向屏幕上方张开 */
+    function tarotFanPivot() {
+        const marginBottom = Math.max(tarotCardH * 0.4, 56);
+        return { px: tarotCenterX, py: tarotStageH - marginBottom };
+    }
+
+    /**
+     * 展开槽位：fan 时 spreadOff 为弧度（整体沿弧滑动）；row 时为水平像素偏移。
+     */
+    function tarotSlotForIndex(i, n, spreadOff) {
+        const off = Number.isFinite(spreadOff) ? spreadOff : 0;
+        const nn = Math.max(1, n);
+        const t = nn <= 1 ? 0.5 : i / (nn - 1);
+
+        if (TAROT_SPREAD_STYLE === 'row') {
+            const pad = Math.max(26, tarotCardW * 0.48);
+            const span = Math.max(72, tarotStageW - pad * 2);
+            const yRow = tarotStageH - tarotCardH * 0.46;
+            return { x: pad + t * span + off, y: yRow, rotZ: 0 };
+        }
+
+        const { px, py } = tarotFanPivot();
+        const halfDeg = Math.min(80, 14 + nn * 2.05);
+        const half = (halfDeg * Math.PI) / 180;
+        const r = Math.min(tarotStageW * 0.36, Math.max(150, nn * tarotCardW * 0.29));
+        const ang = lerp(-half, half, t) + off + 0.007 * Math.sin(i * 1.35);
+        const x = px + r * Math.sin(ang);
+        const y = py - r * Math.cos(ang);
+        const rotZ = (ang * 180) / Math.PI;
+        return { x, y, rotZ };
+    }
+
     function wrap(val, min, max) {
         const range = max - min;
         if (range <= 0) return min;
@@ -2106,10 +2154,6 @@
                 <div class="tarot-front-gloss" aria-hidden="true"></div>
                 <div class="tarot-front-noise" aria-hidden="true"></div>
                 <div class="tarot-orient-badge" aria-hidden="true">UPRIGHT</div>
-                <div class="tarot-meaning" aria-hidden="true">
-                    <div class="tarot-meaning-title">--</div>
-                    <div class="tarot-meaning-text">--</div>
-                </div>
             `;
 
             innerEl.appendChild(backEl);
@@ -2150,32 +2194,8 @@
         }
     }
 
-    function setPickedMeaning(cardIndex, reversed) {
-        if (cardIndex == null) return;
-        const card = tarotCards[cardIndex];
-        if (!card || !card.frontEl) return;
-        const titleEl = card.frontEl.querySelector('.tarot-meaning-title');
-        const textEl = card.frontEl.querySelector('.tarot-meaning-text');
-        const wrapEl = card.frontEl.querySelector('.tarot-meaning');
-        const conf = TAROT_CARDS[cardIndex] || null;
-        if (!titleEl || !textEl || !wrapEl || !conf) return;
-
-        const orientCn = reversed ? '逆位' : '正位';
-        const brief = String(conf.keywords || '')
-            .split(/[，,、]/)[0]
-            .trim() || '留意当下的细微信号';
-
-        titleEl.textContent = `${conf.title} · ${orientCn}`;
-        textEl.textContent = brief;
-        wrapEl.classList.add('is-visible');
-    }
-
     function hideAllTarotMeanings() {
-        for (const card of tarotCards) {
-            if (!card || !card.frontEl) continue;
-            const wrapEl = card.frontEl.querySelector('.tarot-meaning');
-            if (wrapEl) wrapEl.classList.remove('is-visible');
-        }
+        /* 牌面释义已迁至侧栏 #tarotInfoBar，此处保留空函数以兼容既有调用 */
     }
 
     function tarotApplyTransforms(card, timeSec = 0) {
@@ -2224,7 +2244,7 @@
         tarotCenterX = w / 2;
         tarotCenterY = h / 2;
 
-        tarotCardW = Math.round(Math.min(140, w * 0.16));
+        tarotCardW = Math.round(Math.min(152, Math.max(108, w * 0.182)));
         tarotCardH = Math.round(tarotCardW * 1.5);
         tarotStageEl.style.setProperty('--tarot-card-w', `${tarotCardW}px`);
         tarotStageEl.style.setProperty('--tarot-card-h', `${tarotCardH}px`);
@@ -2306,23 +2326,12 @@
         if (Math.abs(dxNorm) > 0.02) tarotShuffleDir = dxNorm > 0 ? 1 : -1;
         else tarotShuffleDir = (Math.random() > 0.5 ? 1 : -1);
 
-        const marginX = tarotCardW * 0.35;
-        const marginY = tarotCardH * 0.35;
-
         for (let i = 0; i < tarotCards.length; i++) {
             const card = tarotCards[i];
             card.faceUp = false;
             card.el.dataset.reversed = '0';
             if (card.frontEl) card.frontEl.style.transform = 'rotateY(180deg)';
-            card.scatterX = lerp(marginX, tarotStageW - marginX, Math.random());
-            card.scatterY = lerp(marginY, tarotStageH - marginY, Math.random());
-            card.scatterRotZ = (Math.random() * 2 - 1) * 14;
             card.scatterPhase = Math.random() * Math.PI * 2;
-            // 洗牌时每张牌的独立运动方向（避免同向“队列感”）
-            const ang = Math.random() * Math.PI * 2;
-            const sp = 90 + Math.random() * 110; // px/s
-            card.shuffleVx = Math.cos(ang) * sp;
-            card.shuffleVy = Math.sin(ang) * sp * 0.65;
 
             card.x = tarotCenterX;
             card.y = tarotCenterY;
@@ -2337,9 +2346,10 @@
             tarotApplyTransforms(card);
         }
 
-        if (triggerValueEl) triggerValueEl.textContent = `状态：洗牌中（方向${tarotShuffleDir > 0 ? '右' : '左'}）`;
+        const spreadLabel = TAROT_SPREAD_STYLE === 'row' ? '一字排开' : '半圆扇形';
+        if (triggerValueEl) triggerValueEl.textContent = `状态：洗牌（${spreadLabel}·轻微滑动）`;
         if (archiveSelectedLabelEl) archiveSelectedLabelEl.textContent = '--';
-        pushLive('PROC', `洗牌中：方向${tarotShuffleDir > 0 ? '右' : '左'}`);
+        pushLive('PROC', `洗牌：${spreadLabel}铺开`);
     }
 
     function tarotPickOneCardFaceDown() {
@@ -2378,20 +2388,20 @@
                 const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                 card.pickIntroStartMs = nowMs;
                 card.pickIntroDurationMs = 520;
-                card.pickIntroFromX = tarotCenterX;
-                card.pickIntroFromY = tarotCenterY + Math.min(80, tarotCardH * 0.42);
-                // 旋转缓入：先带较大角度 + 额外旋转圈数，最后停到 targetRotZ
-                card.pickIntroFromRotZ = card.targetRotZ + (Math.random() > 0.5 ? 22 : -22);
-                card.pickIntroSpinDeg = (Math.random() > 0.5 ? 360 : -360); // 转一圈（方向随机）
-                card.pickIntroFromScale = 0.92;
+                const pickSlot = tarotSlotForIndex(picked, tarotCards.length, 0);
+                card.pickIntroFromX = pickSlot.x;
+                card.pickIntroFromY = pickSlot.y;
+                card.pickIntroFromRotZ = pickSlot.rotZ + (Math.random() > 0.5 ? 16 : -16);
+                card.pickIntroSpinDeg = (Math.random() > 0.5 ? 300 : -300);
+                card.pickIntroFromScale = 0.9;
                 card.pickIntroFromAlpha = 0.0;
             } else {
-                // 保持当前位置，缩小并淡化为背景
-                card.targetX = card.x;
-                card.targetY = card.y;
-                card.targetRotZ = card.rotZ;
-                card.targetScale = 0.46;
-                card.targetAlpha = 0.14;
+                const slot = tarotSlotForIndex(i, tarotCards.length, 0);
+                card.targetX = slot.x;
+                card.targetY = slot.y;
+                card.targetRotZ = slot.rotZ;
+                card.targetScale = 0.5;
+                card.targetAlpha = 0.18;
             }
         }
 
@@ -2420,7 +2430,6 @@
         card.targetScale = 1.68;
         card.targetAlpha = 1;
         card.faceUp = true;
-        setPickedMeaning(tarotPickedIndex, tarotPickedReversed);
         showTarotInfo(tarotPickedIndex, tarotPickedReversed);
         tarotApplyTransforms(card);
 
@@ -2561,53 +2570,42 @@
         } else if (tarotState === 'shuffling') {
             const nowWall = Date.now();
             const tSec = (nowWall - tarotShuffleStartMs) / 1000;
-            const spreadT = clamp01(tSec / 0.65);
+            const spreadT = clamp01(tSec / 0.88);
             const spreadEase = 1 - Math.pow(1 - spreadT, 3);
 
-            // 手的移动方向决定洗牌横向方向
             const dxNorm = getWristDxNorm();
             if (Math.abs(dxNorm) > 0.04) tarotShuffleDir = dxNorm > 0 ? 1 : -1;
 
-            const minX = tarotCardW * 0.2;
-            const maxX = tarotStageW - tarotCardW * 0.2;
-            const minY = tarotCardH * 0.15;
-            const maxY = tarotStageH - tarotCardH * 0.15;
+            const n = tarotCards.length;
+            const slideFan = 0.042 * Math.sin(tSec * 0.66) * tarotShuffleDir;
+            const slideRow = 11 * Math.sin(tSec * 0.66) * tarotShuffleDir;
+            const slideBase = TAROT_SPREAD_STYLE === 'row' ? slideRow : slideFan;
+            const micro = 0.012 * Math.sin(tSec * 0.88);
 
-            for (const card of tarotCards) {
-                // spread 阶段：从中心摊开；完成后：每张牌独立漂移 + 轻微抖动 + 边界反弹（不瞬移、不“消失”）
+            for (let i = 0; i < n; i++) {
+                const card = tarotCards[i];
+                const slot = tarotSlotForIndex(i, n, slideBase + micro * Math.sin(card.scatterPhase + i * 0.31));
+                const tx = slot.x;
+                const ty = slot.y;
+                const tRot = slot.rotZ;
+
                 if (spreadEase < 0.999) {
-                    const tx = lerp(tarotCenterX, card.scatterX, spreadEase);
-                    const ty = lerp(tarotCenterY, card.scatterY, spreadEase);
-                    const follow = followFor(0.22);
+                    const sx = lerp(tarotCenterX, tx, spreadEase);
+                    const sy = lerp(tarotCenterY, ty, spreadEase);
+                    const sRot = lerp(0, tRot, spreadEase);
+                    const follow = followFor(0.24);
+                    card.x = lerp(card.x, sx, follow);
+                    card.y = lerp(card.y, sy, follow);
+                    card.rotZ = lerp(card.rotZ, sRot, followFor(0.22));
+                } else {
+                    const follow = followFor(0.2);
                     card.x = lerp(card.x, tx, follow);
                     card.y = lerp(card.y, ty, follow);
-                } else {
-                    const dt = dtMs / 1000;
-
-                    // 手势方向只作为“微弱”全局偏置，避免所有牌同向狂飙
-                    const drift = tarotShuffleDir * 32; // px/s
-                    const wobX = Math.sin(tSec * 2.2 + card.scatterPhase) * 10;
-                    const wobY = Math.sin(tSec * 1.7 + card.scatterPhase * 1.1) * 18;
-
-                    const vx = (card.shuffleVx || 0) + drift;
-                    const vy = (card.shuffleVy || 0);
-
-                    card.x += vx * dt;
-                    card.y += vy * dt;
-
-                    // 边界反弹：保证不 wrap/瞬移
-                    if (card.x < minX) { card.x = minX; card.shuffleVx = Math.abs(card.shuffleVx || 0) || 120; }
-                    if (card.x > maxX) { card.x = maxX; card.shuffleVx = -Math.abs(card.shuffleVx || 0) || -120; }
-                    if (card.y < minY) { card.y = minY; card.shuffleVy = Math.abs(card.shuffleVy || 0) || 80; }
-                    if (card.y > maxY) { card.y = maxY; card.shuffleVy = -Math.abs(card.shuffleVy || 0) || -80; }
-
-                    // 抖动叠加（不改变真实位置，用于“漂浮”观感）
-                    card.x += wobX * 0.12;
-                    card.y += wobY * 0.12;
+                    card.rotZ = lerp(card.rotZ, tRot, followFor(0.18));
                 }
 
-                card.rotZ = card.scatterRotZ + Math.sin(tSec * 3.3 + card.scatterPhase) * 3.2;
-                card.scale = 1 + Math.sin(tSec * 2.0 + card.scatterPhase) * 0.05 + spreadEase * 0.06;
+                const targetSc = 1 + spreadEase * 0.04;
+                card.scale = lerp(card.scale, targetSc, followFor(0.18));
                 card.alpha = 1;
                 tarotApplyTransforms(card, timeSec);
             }
