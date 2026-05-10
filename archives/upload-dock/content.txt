@@ -1,0 +1,8 @@
+Upload Dock Archive
+
+This is placeholder text.
+Replace with your upload instructions or checklist.
+
+Gesture Terminal behavior:
+- Swipe left/right to change the selected archive.
+- Pinch opens this text in a modal after unlocking.

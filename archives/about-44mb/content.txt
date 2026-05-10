@@ -1,0 +1,8 @@
+About 44 MiIlion
+
+This is placeholder text for your project description.
+Replace it with your real content.
+
+Gesture Terminal behavior:
+- Swipe left/right to change the selected archive.
+- Pinch opens this text in a modal after unlocking.

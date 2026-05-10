@@ -1,0 +1,8 @@
+Galaxy Notes Archive
+
+This is placeholder text.
+Replace it with your own notes about the galaxy map.
+
+Gesture Terminal behavior:
+- Swipe left/right to change the selected archive.
+- Pinch (捏合) opens this text in a modal after unlocking.
