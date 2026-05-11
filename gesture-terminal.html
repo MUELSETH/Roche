@@ -1456,6 +1456,47 @@
         }
     }
 
+    function tarotFaceIdxAtSlot(vis) {
+        const n = TAROT_CARD_FACE_COUNT;
+        if (!tarotDeckOrder || tarotDeckOrder.length !== n) return Math.max(0, Math.min(n - 1, vis));
+        const idx = tarotDeckOrder[vis];
+        return Math.max(0, Math.min(n - 1, idx));
+    }
+
+    function tarotShuffleDeckOrder() {
+        const n = TAROT_CARD_FACE_COUNT;
+        if (!tarotDeckOrder || tarotDeckOrder.length !== n) {
+            tarotDeckOrder = Array.from({ length: n }, (_, i) => i);
+        }
+        for (let i = n - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const t = tarotDeckOrder[i];
+            tarotDeckOrder[i] = tarotDeckOrder[j];
+            tarotDeckOrder[j] = t;
+        }
+    }
+
+    function applyTarotDeckFacesToCards() {
+        if (!tarotCards.length || !tarotDeckOrder) return;
+        for (let vis = 0; vis < tarotCards.length; vis++) {
+            const idx = tarotFaceIdxAtSlot(vis);
+            const c = TAROT_CARDS[idx];
+            const card = tarotCards[vis];
+            if (!card || !card.frontEl) continue;
+            card.faceDeckIdx = idx;
+            card.el.dataset.faceDeckIdx = String(idx);
+            const imgUrl = `./assets/tarot-major/${idx}m.jpg`;
+            card.frontEl.setAttribute('aria-label', (c && c.title) || 'Tarot card');
+            const imgs = card.frontEl.querySelectorAll('.tarot-front-img');
+            imgs.forEach((img) => {
+                img.src = imgUrl;
+                img.alt = (c && c.title) || '';
+                img.dataset.failed = '';
+                img.style.opacity = '';
+            });
+        }
+    }
+
     function commitPickedCardToGroup(cardIndex, reversed) {
         const c = TAROT_CARDS[cardIndex];
         const title = (c && c.title) ? c.title : `CARD-${cardIndex + 1}`;
@@ -1524,6 +1565,8 @@
     let tarotAimIndex = -1;
     /** 牌图 naturalHeight / naturalWidth，加载首图后写入 */
     let tarotImageAspect = 1.5;
+    /** 扇面上第 vis 张物理位置对应的塔罗牌索引（0..21），每次洗牌随机打乱 */
+    let tarotDeckOrder = null;
 
     // 识别状态（稳定触发）
     let lastFrameGesture = 'unknown';
@@ -2091,6 +2134,7 @@
                 el: cardEl,
                 innerEl,
                 frontEl,
+                faceDeckIdx: i,
                 faceUp: false,
                 appliedFaceUp: null,
                 x: 0, y: 0,
@@ -2114,6 +2158,9 @@
             }
         };
         probeImg.src = './assets/tarot-major/0m.jpg';
+
+        tarotDeckOrder = Array.from({ length: TAROT_CARD_FACE_COUNT }, (_, j) => j);
+        applyTarotDeckFacesToCards();
     }
 
     function setPickedOrientation(card, reversed) {
@@ -2179,13 +2226,13 @@
         tarotCenterX = w / 2;
         tarotCenterY = h / 2;
 
-        tarotCardW = Math.round(Math.min(178, Math.max(100, w * 0.198)));
+        tarotCardW = Math.round(Math.min(196, Math.max(112, w * 0.218)));
         const asp = Number.isFinite(tarotImageAspect) && tarotImageAspect > 0.4 ? tarotImageAspect : 1.5;
         tarotCardH = Math.round(tarotCardW * asp);
 
         let shrinkGuard = 0;
         while (shrinkGuard < 56 && !tarotFanSlotsFitStage()) {
-            tarotCardW = Math.max(72, tarotCardW - 2);
+            tarotCardW = Math.max(76, tarotCardW - 2);
             tarotCardH = Math.round(tarotCardW * asp);
             shrinkGuard += 1;
         }
@@ -2248,6 +2295,9 @@
         hideAllTarotMeanings();
         clearTarotInfo();
 
+        tarotShuffleDeckOrder();
+        applyTarotDeckFacesToCards();
+
         const dxNorm = getWristDxNorm();
         if (Math.abs(dxNorm) > 0.02) tarotShuffleDir = dxNorm > 0 ? 1 : -1;
         else tarotShuffleDir = (Math.random() > 0.5 ? 1 : -1);
@@ -2278,7 +2328,7 @@
         const spreadLabel = TAROT_SPREAD_STYLE === 'row' ? '一字排开' : '半圆扇形';
         if (triggerValueEl) triggerValueEl.textContent = `状态：洗牌（${spreadLabel}）·张手左右对准预选，捏拳抽出`;
         if (archiveSelectedLabelEl) archiveSelectedLabelEl.textContent = '--';
-        pushLive('PROC', `洗牌：${spreadLabel}铺开`);
+        pushLive('PROC', `洗牌：${spreadLabel}铺开（牌序已随机打乱）`);
     }
 
     function tarotPickOneCardFaceDown() {
@@ -2299,6 +2349,7 @@
         tarotPickedIndex = picked;
         tarotAimIndex = -1;
         tarotPickedReversed = (Math.random() < 0.5);
+        const faceIdx = tarotFaceIdxAtSlot(picked);
         // 只看抽牌之后的晃动，避免窗口里混入前一轮洗牌/移动的历史
         wristHistory.length = 0;
         wristAngleSmooth = null;
@@ -2312,7 +2363,7 @@
                 card.targetX = peekPos.x;
                 card.targetY = peekPos.y;
                 card.targetRotZ = peekPos.rotZ;
-                card.targetScale = 1.32;
+                card.targetScale = 1.38;
                 card.targetAlpha = 1;
 
                 const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
@@ -2334,9 +2385,9 @@
             }
         }
 
-        const c0 = TAROT_CARDS[picked];
+        const c0 = TAROT_CARDS[faceIdx];
         const orientCn = tarotPickedReversed ? '逆位' : '正位';
-        if (triggerValueEl) triggerValueEl.textContent = `状态：第 ${picked + 1} 张沿弧外伸（${orientCn}｜单指晃动翻面）`;
+        if (triggerValueEl) triggerValueEl.textContent = `状态：已选出「${c0 ? c0.title : '?'}」（${orientCn}｜单指晃动翻面）`;
         if (archiveSelectedLabelEl) archiveSelectedLabelEl.textContent = c0 ? `${c0.title} · ${orientCn}` : '--';
         pushLive('PICK', '抽取：沿弧半径外伸（等待翻面）');
     }
@@ -2356,17 +2407,18 @@
         card.targetRotZ = 0;
         card.targetX = tarotCenterX;
         card.targetY = tarotCenterY;
-        card.targetScale = 1.62;
+        card.targetScale = 1.72;
         card.targetAlpha = 1;
         card.faceUp = true;
         tarotApplyTransforms(card);
 
-        const c = TAROT_CARDS[tarotPickedIndex];
+        const faceIdxUp = tarotFaceIdxAtSlot(tarotPickedIndex);
+        const c = TAROT_CARDS[faceIdxUp];
         const orientCn = tarotPickedReversed ? '逆位' : '正位';
         if (triggerValueEl) triggerValueEl.textContent = `状态：正面已翻开（${c.title}｜${orientCn}）`;
         if (archiveSelectedLabelEl) archiveSelectedLabelEl.textContent = `${c.title} · ${orientCn}`;
         pushLive('FLIP', `翻面：${c.title} · ${orientCn}`);
-        commitPickedCardToGroup(tarotPickedIndex, tarotPickedReversed);
+        commitPickedCardToGroup(faceIdxUp, tarotPickedReversed);
     }
 
     function tarotReturnPickedToDeck() {
