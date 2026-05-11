@@ -1895,6 +1895,44 @@
         return { px: tarotCenterX, py: tarotStageH - marginBottom };
     }
 
+    /** 扇形槽：同一角度 ang 下半径 r 增大即为「沿弧探头」，不向舞台中心平移 */
+    function tarotFanSlotRadial(i, n, spreadOff) {
+        const off = Number.isFinite(spreadOff) ? spreadOff : 0;
+        const nn = Math.max(1, n);
+        const t = nn <= 1 ? 0.5 : i / (nn - 1);
+        const { px, py } = tarotFanPivot();
+        const padX = tarotCardW * 0.52;
+        const maxChord = Math.max(72, tarotStageW - padX * 2);
+        const halfDeg = Math.min(58, Math.max(14, 6.5 + nn * 0.95));
+        const half = (halfDeg * Math.PI) / 180;
+        const sinh = Math.sin(half);
+        let r = sinh > 0.06 ? (maxChord - tarotCardW * 1.15) / (2 * sinh) : maxChord * 0.22;
+        const maxRVert = Math.max(48, py - tarotCardH * 0.62);
+        r = Math.min(r, maxRVert, nn * tarotCardW * 0.175 + 48);
+        r = Math.max(48, r);
+        const ang = lerp(-half, half, t) + off + 0.006 * Math.sin(i * 1.3);
+        const rotZ = (ang * 180) / Math.PI;
+        const x = px + r * Math.sin(ang);
+        const y = py - r * Math.cos(ang);
+        return { px, py, ang, r, rotZ, x, y };
+    }
+
+    /** 相对槽位沿弧外伸 dr（fan）；一字排开则略微上移 */
+    function tarotArcPeekXY(i, n, spreadOff, dr) {
+        const d = Number.isFinite(dr) ? dr : 0;
+        if (TAROT_SPREAD_STYLE === 'row') {
+            const slot = tarotSlotForIndex(i, n, spreadOff);
+            return { x: slot.x, y: slot.y - d * 0.9, rotZ: slot.rotZ };
+        }
+        const rad = tarotFanSlotRadial(i, n, spreadOff);
+        const r2 = rad.r + d;
+        return {
+            x: rad.px + r2 * Math.sin(rad.ang),
+            y: rad.py - r2 * Math.cos(rad.ang),
+            rotZ: rad.rotZ
+        };
+    }
+
     /**
      * 展开槽位：fan 时 spreadOff 为弧度（整体沿弧滑动）；row 时为水平像素偏移。
      */
@@ -1910,21 +1948,20 @@
             return { x: pad + t * span + off, y: yRow, rotZ: 0 };
         }
 
-        const { px, py } = tarotFanPivot();
-        const padX = tarotCardW * 0.52;
-        const maxChord = Math.max(72, tarotStageW - padX * 2);
-        const halfDeg = Math.min(58, Math.max(14, 6.5 + nn * 0.95));
-        const half = (halfDeg * Math.PI) / 180;
-        const sinh = Math.sin(half);
-        let r = sinh > 0.06 ? (maxChord - tarotCardW * 1.15) / (2 * sinh) : maxChord * 0.22;
-        const maxRVert = Math.max(48, py - tarotCardH * 0.62);
-        r = Math.min(r, maxRVert, nn * tarotCardW * 0.175 + 48);
-        r = Math.max(48, r);
-        const ang = lerp(-half, half, t) + off + 0.006 * Math.sin(i * 1.3);
-        const x = px + r * Math.sin(ang);
-        const y = py - r * Math.cos(ang);
-        const rotZ = (ang * 180) / Math.PI;
-        return { x, y, rotZ };
+        const rad = tarotFanSlotRadial(i, n, spreadOff);
+        return { x: rad.x, y: rad.y, rotZ: rad.rotZ };
+    }
+
+    /** 手腕水平映射到牌序：两侧留出「边缘区」直接对应第 1 / 最后一张，避免选不到两边 */
+    function wristToTarotAimIndex(wristX, n) {
+        const nn = Math.max(1, n);
+        if (nn <= 1) return 0;
+        let h = 1 - clamp01(wristX);
+        const edge = 0.15;
+        if (h <= edge) return 0;
+        if (h >= 1 - edge) return nn - 1;
+        const hm = (h - edge) / (1 - 2 * edge);
+        return Math.max(0, Math.min(nn - 1, Math.round(hm * (nn - 1))));
     }
 
     function wrap(val, min, max) {
@@ -2244,27 +2281,22 @@
             card.faceUp = false;
             if (i === picked) {
                 setPickedOrientation(card, tarotPickedReversed);
-                const slotP = tarotSlotForIndex(picked, nPick, 0);
-                const piv = tarotFanPivot();
-                const vx = slotP.x - piv.px;
-                const vy = slotP.y - piv.py;
-                const vlen = Math.hypot(vx, vy) || 1;
-                const peek = tarotCardH * 0.36;
-                card.targetX = slotP.x + (vx / vlen) * peek;
-                card.targetY = slotP.y + (vy / vlen) * peek;
-                card.targetRotZ = slotP.rotZ;
-                card.targetScale = 1.1;
+                const peekPos = tarotArcPeekXY(picked, nPick, 0, tarotCardH * 0.22);
+                card.targetX = peekPos.x;
+                card.targetY = peekPos.y;
+                card.targetRotZ = peekPos.rotZ;
+                card.targetScale = 1.03;
                 card.targetAlpha = 1;
 
                 const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                 card.pickIntroStartMs = nowMs;
-                card.pickIntroDurationMs = 420;
+                card.pickIntroDurationMs = 380;
                 card.pickIntroFromX = card.x;
                 card.pickIntroFromY = card.y;
                 card.pickIntroFromRotZ = card.rotZ;
-                card.pickIntroSpinDeg = (Math.random() > 0.5 ? 55 : -55);
-                card.pickIntroFromScale = Math.min(1.12, Math.max(0.92, card.scale || 1));
-                card.pickIntroFromAlpha = Math.min(1, Math.max(0.75, card.alpha || 1));
+                card.pickIntroSpinDeg = 0;
+                card.pickIntroFromScale = Math.min(1.06, Math.max(0.96, card.scale || 1));
+                card.pickIntroFromAlpha = Math.min(1, Math.max(0.82, card.alpha || 1));
             } else {
                 const slot = tarotSlotForIndex(i, tarotCards.length, 0);
                 card.targetX = slot.x;
@@ -2277,9 +2309,9 @@
 
         const c0 = TAROT_CARDS[picked];
         const orientCn = tarotPickedReversed ? '逆位' : '正位';
-        if (triggerValueEl) triggerValueEl.textContent = `状态：第 ${picked + 1} 张已探头（${orientCn}｜单指晃动翻面）`;
+        if (triggerValueEl) triggerValueEl.textContent = `状态：第 ${picked + 1} 张沿弧外伸（${orientCn}｜单指晃动翻面）`;
         if (archiveSelectedLabelEl) archiveSelectedLabelEl.textContent = c0 ? `${c0.title} · ${orientCn}` : '--';
-        pushLive('PICK', '抽取：牌列中探头（等待翻面）');
+        pushLive('PICK', '抽取：沿弧半径外伸（等待翻面）');
     }
 
     function tarotFlipPickedToFaceUp() {
@@ -2453,14 +2485,21 @@
 
             for (let i = 0; i < n; i++) {
                 const card = tarotCards[i];
-                const slot = tarotSlotForIndex(i, n, slideBase + micro * Math.sin(card.scatterPhase + i * 0.31));
-                let tx = slot.x;
-                let ty = slot.y;
-                const tRot = slot.rotZ;
+                const offStr = slideBase + micro * Math.sin(card.scatterPhase + i * 0.31);
                 const aimLift = spreadEase >= 0.9 && tarotAimIndex >= 0 && tarotAimIndex < n && i === tarotAimIndex;
+                let tx;
+                let ty;
+                let tRot;
                 if (aimLift) {
-                    tx = lerp(tx, tarotCenterX, 0.16);
-                    ty = lerp(ty, tarotCenterY, 0.12);
+                    const pk = tarotArcPeekXY(i, n, offStr, tarotCardH * 0.11);
+                    tx = pk.x;
+                    ty = pk.y;
+                    tRot = pk.rotZ;
+                } else {
+                    const slot = tarotSlotForIndex(i, n, offStr);
+                    tx = slot.x;
+                    ty = slot.y;
+                    tRot = slot.rotZ;
                 }
 
                 if (spreadEase < 0.999) {
@@ -2479,7 +2518,7 @@
                 }
 
                 let targetSc = 1 + spreadEase * 0.04;
-                if (aimLift) targetSc *= 1.09;
+                if (aimLift) targetSc *= 1.045;
                 card.scale = lerp(card.scale, targetSc, followFor(0.18));
                 card.alpha = 1;
                 tarotApplyTransforms(card, timeSec);
@@ -2716,9 +2755,7 @@
                 updateSwipeFromWrist(wrist, indexMcp);
 
                 if (tarotActive && tarotState === 'shuffling' && gestureNow === 'open_palm' && tarotCards.length) {
-                    const nA = tarotCards.length;
-                    const mapped = 1 - wrist.x;
-                    tarotAimIndex = Math.max(0, Math.min(nA - 1, Math.round(mapped * Math.max(0, nA - 1))));
+                    tarotAimIndex = wristToTarotAimIndex(wrist.x, tarotCards.length);
                 }
 
                 setGestureUi(gestureNow);
