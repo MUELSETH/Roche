@@ -198,6 +198,33 @@
             letter-spacing: 0.2px;
         }
 
+        .hero-side {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.55rem;
+        }
+
+        .album-hero-btn {
+            border: 1px solid var(--glass-stroke-inner);
+            background: var(--glass-fill);
+            -webkit-backdrop-filter: blur(18px) saturate(1.12);
+            backdrop-filter: blur(18px) saturate(1.12);
+            color: #e8efff;
+            border-radius: 12px;
+            padding: 0.38rem 0.72rem;
+            font-size: 0.74rem;
+            letter-spacing: 0.35px;
+            cursor: pointer;
+            box-shadow: var(--glass-highlight-top);
+            font-family: inherit;
+        }
+
+        .album-hero-btn:hover {
+            border-color: rgba(255, 255, 255, 0.26);
+            background: var(--glass-fill-raised);
+        }
+
         .mission-tag {
             font-size: 0.72rem;
             letter-spacing: 1.8px;
@@ -538,6 +565,10 @@
             min-width: 150px;
         }
 
+        .filter-field--narrow {
+            min-width: 128px;
+        }
+
         .filter-field label {
             font-size: 0.68rem;
             letter-spacing: 0.5px;
@@ -812,6 +843,7 @@
 
         /* 图片容器 — 强调巨幅视觉 */
         .image-frame {
+            position: relative;
             width: 100%;
             background: rgba(0, 0, 0, 0.35);
             border-radius: 14px;
@@ -820,6 +852,87 @@
             border: 1px solid var(--glass-stroke-inner);
             -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
+        }
+
+        .photo-album-pin {
+            position: absolute;
+            top: 0.42rem;
+            right: 0.42rem;
+            z-index: 2;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            background: rgba(8, 12, 24, 0.55);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            color: #e8f0ff;
+            font-size: 1.05rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-family: inherit;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+        }
+
+        .photo-album-pin:hover {
+            border-color: rgba(186, 210, 255, 0.45);
+            background: rgba(24, 36, 64, 0.72);
+        }
+
+        .album-create-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .album-create-row input {
+            flex: 1 1 160px;
+            min-width: 0;
+        }
+
+        .album-manager-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: min(42vh, 320px);
+            overflow: auto;
+            border: 1px solid var(--glass-stroke-inner);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.18);
+        }
+
+        .album-manager-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.65rem;
+            padding: 0.55rem 0.65rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.82rem;
+        }
+
+        .album-manager-row:last-child {
+            border-bottom: none;
+        }
+
+        .album-manager-meta {
+            color: var(--text-mute);
+            font-size: 0.7rem;
+            margin-top: 0.15rem;
+        }
+
+        .album-manager-actions {
+            flex: 0 0 auto;
+        }
+
+        .album-modal-content .danger-btn {
+            font-size: 0.72rem;
+            padding: 0.32rem 0.55rem;
         }
 
         .photo-img {
@@ -1147,6 +1260,10 @@
             .hero-copy p {
                 font-size: 0.8rem;
             }
+            .hero-side {
+                align-items: flex-start;
+            }
+
             .mission-tag {
                 text-align: left;
             }
@@ -1335,7 +1452,10 @@
             <h1>星际胶片巡航 <span class="title-en">Interstellar Film Cruise</span></h1>
             <p>用于两位授权成员共同维护的星空摄影展示站。</p>
         </div>
-        <div class="mission-tag">MISSION STATUS · DUAL AUTHORIZATION</div>
+        <div class="hero-side">
+            <button type="button" class="album-hero-btn" id="openAlbumModalBtn" title="创建与管理本地专辑">📀 专辑</button>
+            <div class="mission-tag">MISSION STATUS · DUAL AUTHORIZATION</div>
+        </div>
     </div>
 
     <div class="control-bar">
@@ -1368,10 +1488,22 @@
             <label for="endDateFilter">结束日期</label>
             <input id="endDateFilter" class="filter-input" type="date">
         </div>
+        <div class="filter-field filter-field--narrow">
+            <label for="albumViewFilter">专辑视图</label>
+            <select id="albumViewFilter" class="filter-input" aria-label="按专辑筛选星图">
+                <option value="">全部星图</option>
+            </select>
+        </div>
+        <div class="filter-field filter-field--narrow">
+            <label for="albumTargetSelect">收录到</label>
+            <select id="albumTargetSelect" class="filter-input" aria-label="单张收录目标专辑" disabled>
+                <option value="">先创建专辑</option>
+            </select>
+        </div>
         <div class="filter-actions">
             <button id="resetFilterBtn" class="filter-reset">清空筛选</button>
         </div>
-        <div class="filter-hint">粗略筛选：按发布人精确匹配，按日期范围（含当天）过滤。</div>
+        <div class="filter-hint">粗略筛选：按发布人、日期；专辑为浏览器本地收纳，在「收录到」选好专辑后，点击照片角标「＋」即可收录。</div>
     </div>
 
     <!-- 大画幅流式布局（分页 / 筛选切换时星尘卷入过场） -->
@@ -1465,6 +1597,22 @@
     </div>
 </div>
 
+<!-- 星图专辑（本地收纳） -->
+<div id="albumModal" class="modal" aria-hidden="true">
+    <div class="modal-content album-modal-content">
+        <h3>📀 星图专辑</h3>
+        <p class="auth-help">专辑保存在本机浏览器，便于常看片单收纳；换设备或清除站点数据后不会同步。</p>
+        <div class="album-create-row">
+            <input type="text" id="albumNameInput" class="filter-input" maxlength="48" placeholder="新专辑名称" autocomplete="off">
+            <button type="button" id="createAlbumBtn" class="primary">创建</button>
+        </div>
+        <ul class="album-manager-list" id="albumManagerList" aria-label="专辑列表"></ul>
+        <div class="modal-buttons">
+            <button type="button" id="closeAlbumModalBtn">关闭</button>
+        </div>
+    </div>
+</div>
+
 <!-- 登录模态框 -->
 <div id="authModal" class="modal">
     <div class="modal-content">
@@ -1500,8 +1648,12 @@
     const filterState = {
         author: '',
         startDate: '',
-        endDate: ''
+        endDate: '',
+        albumId: ''
     };
+
+    /** 星图专辑：仅存本机 localStorage，便于片单收纳 */
+    const ALBUMS_STORAGE_KEY = 'galaxy_star_albums_v1';
     const photoPagerState = { page: 1, pageSize: 6 };
 
     /* 胶片巡航：分页 / 筛选切换时的星尘卷入过场 */
@@ -1583,6 +1735,45 @@
         });
     }
 
+    function loadAlbums() {
+        try {
+            const raw = localStorage.getItem(ALBUMS_STORAGE_KEY);
+            const parsed = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(parsed)) return [];
+            return parsed
+                .map((a) => ({
+                    id: String(a.id || '').trim(),
+                    name: (String(a.name || '').trim() || '未命名专辑').slice(0, 48),
+                    photoIds: Array.isArray(a.photoIds) ? a.photoIds.map((id) => String(id)) : []
+                }))
+                .filter((a) => a.id);
+        } catch (_e) {
+            return [];
+        }
+    }
+
+    function saveAlbums(list) {
+        try {
+            localStorage.setItem(ALBUMS_STORAGE_KEY, JSON.stringify(list));
+        } catch (_e) {
+            showToast('无法保存专辑（存储可能被禁用）');
+        }
+    }
+
+    function newAlbumId() {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+        return `alb_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    }
+
+    function getAlbumPhotoIdSet(albumId) {
+        const id = String(albumId || '').trim();
+        if (!id) return null;
+        const albums = loadAlbums();
+        const found = albums.find((a) => a.id === id);
+        if (!found) return null;
+        return new Set(found.photoIds.map(String));
+    }
+
     function formatDateDisplay(dateLike) {
         if (!dateLike) return 'Unknown';
         // Display in Asia/Shanghai (UTC+8) and include seconds.
@@ -1630,6 +1821,12 @@
                     return false;
                 }
             }
+            if (filterState.albumId) {
+                const idSet = getAlbumPhotoIdSet(filterState.albumId);
+                if (!idSet || !idSet.has(String(photo.id))) {
+                    return false;
+                }
+            }
             return true;
         });
     }
@@ -1649,6 +1846,68 @@
         const canKeep = !currentValue || names.includes(currentValue);
         select.value = canKeep ? currentValue : '';
         filterState.author = select.value;
+    }
+
+    function refreshAlbumFilterSelects() {
+        const viewSel = document.getElementById('albumViewFilter');
+        const targetSel = document.getElementById('albumTargetSelect');
+        if (!viewSel || !targetSel) return;
+
+        const albums = loadAlbums();
+        const prevView = viewSel.value || filterState.albumId || '';
+        const prevTarget = targetSel.value || '';
+
+        let viewHtml = '<option value="">全部星图</option>';
+        viewHtml += albums.map((a) => {
+            const n = a.photoIds.length;
+            const label = `${a.name}（${n}）`;
+            return `<option value="${escapeHtml(a.id)}">${escapeHtml(label)}</option>`;
+        }).join('');
+        viewSel.innerHTML = viewHtml;
+
+        const viewIds = new Set(['', ...albums.map((a) => a.id)]);
+        viewSel.value = viewIds.has(prevView) ? prevView : '';
+        filterState.albumId = viewSel.value;
+
+        if (!albums.length) {
+            targetSel.innerHTML = '<option value="">先创建专辑</option>';
+            targetSel.disabled = true;
+            targetSel.value = '';
+            return;
+        }
+
+        targetSel.disabled = false;
+        targetSel.innerHTML = albums.map((a) => {
+            return `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)}</option>`;
+        }).join('');
+
+        const targetIds = new Set(albums.map((a) => a.id));
+        if (prevTarget && targetIds.has(prevTarget)) {
+            targetSel.value = prevTarget;
+        } else {
+            targetSel.value = albums[0].id;
+        }
+    }
+
+    function renderAlbumManagerList() {
+        const ul = document.getElementById('albumManagerList');
+        if (!ul) return;
+        const albums = loadAlbums();
+        if (!albums.length) {
+            ul.innerHTML = '<li class="album-manager-row"><span class="album-manager-meta">暂无专辑，在上方输入名称后创建。</span></li>';
+            return;
+        }
+        ul.innerHTML = albums.map((a) => `
+            <li class="album-manager-row" data-album-id="${escapeHtml(a.id)}">
+                <div>
+                    <div>${escapeHtml(a.name)}</div>
+                    <div class="album-manager-meta">${a.photoIds.length} 张</div>
+                </div>
+                <div class="album-manager-actions">
+                    <button type="button" class="danger-btn" data-delete-album-id="${escapeHtml(a.id)}">删除</button>
+                </div>
+            </li>
+        `).join('');
     }
 
     function setPhotoPagerVisible(show) {
@@ -1806,12 +2065,17 @@
             const datePart = (f.startDate || f.endDate)
                 ? `日期：${escapeHtml(f.startDate || '任意')} ~ ${escapeHtml(f.endDate || '任意')}`
                 : '日期：任意区间';
+            let albumPart = '专辑：全部星图';
+            if (f.albumId) {
+                const alb = loadAlbums().find((a) => a.id === f.albumId);
+                albumPart = alb ? `专辑：${escapeHtml(alb.name)}` : '专辑：已选（原专辑可能已删）';
+            }
 
             const page = lastView.data.page || 1;
             const pageSize = lastView.data.pageSize || 6;
             const visibleTotal = lastView.data.visibleTotal ?? '';
 
-            lines.push(`在 ${escapeHtml(formatTimeAgo(lastView.t))}，你将星图推进到第 ${escapeHtml(String(page))} 页（每页 ${escapeHtml(String(pageSize))} 张），当前可见 ${escapeHtml(String(visibleTotal))} 张。${authorPart}；${datePart}。`);
+            lines.push(`在 ${escapeHtml(formatTimeAgo(lastView.t))}，你将星图推进到第 ${escapeHtml(String(page))} 页（每页 ${escapeHtml(String(pageSize))} 张），当前可见 ${escapeHtml(String(visibleTotal))} 张。${authorPart}；${datePart}；${albumPart}。`);
         } else if (last && last.type) {
             lines.push(`在 ${escapeHtml(formatTimeAgo(last.t))}，你的行为触发了一段回声。`);
         }
@@ -1859,13 +2123,18 @@
         if (photoPagerState.page < 1) photoPagerState.page = 1;
         const from = (photoPagerState.page - 1) * pageSize;
         const pagePhotos = visiblePhotos.slice(from, from + pageSize);
+        const albumsForPins = loadAlbums();
 
         let html = '';
         for (let photo of pagePhotos) {
             const authorDisplay = getDisplayNameByEmail(photo.author || '深空摄影师');
+            const pinBtn = albumsForPins.length
+                ? `<button type="button" class="photo-album-pin" data-photo-id="${escapeHtml(String(photo.id))}" title="收录到当前「收录到」所选专辑">＋</button>`
+                : '';
             html += `
                 <div class="photo-item" data-id="${photo.id}">
                     <div class="image-frame">
+                        ${pinBtn}
                         <img class="photo-img" src="${photo.imageUrl}" alt="${escapeHtml(photo.title)}" loading="lazy" onerror="this.src='https://images-assets.nasa.gov/image/PIA23628/PIA23628~orig.jpg'">
                     </div>
                     <aside class="photo-info">
@@ -1889,6 +2158,7 @@
                 author: filterState.author || '',
                 startDate: filterState.startDate || '',
                 endDate: filterState.endDate || '',
+                albumId: filterState.albumId || '',
                 page: photoPagerState.page || 1,
                 pageSize: photoPagerState.pageSize || 6,
             });
@@ -1899,7 +2169,8 @@
                     filters: {
                         author: filterState.author || '',
                         startDate: filterState.startDate || '',
-                        endDate: filterState.endDate || ''
+                        endDate: filterState.endDate || '',
+                        albumId: filterState.albumId || ''
                     },
                     page: photoPagerState.page || 1,
                     pageSize: photoPagerState.pageSize || 6,
@@ -1975,6 +2246,7 @@
             ownerId: row.owner_id
         }));
         refreshAuthorFilterOptions();
+        refreshAlbumFilterSelects();
         renderStream();
         renderPersonalManager();
     }
@@ -2483,6 +2755,8 @@
         filterState.author = authorFilter ? authorFilter.value : '';
         filterState.startDate = startDateFilter ? startDateFilter.value : '';
         filterState.endDate = endDateFilter ? endDateFilter.value : '';
+        const albumViewFilter = document.getElementById('albumViewFilter');
+        filterState.albumId = albumViewFilter ? albumViewFilter.value : '';
         photoPagerState.page = 1;
         runCruiseStreamTransition();
     }
@@ -2493,6 +2767,11 @@
         }
         if (e.target === managerModal) {
             managerModal.style.display = 'none';
+        }
+        const albumModal = document.getElementById('albumModal');
+        if (albumModal && e.target === albumModal) {
+            albumModal.style.display = 'none';
+            albumModal.setAttribute('aria-hidden', 'true');
         }
         if (shipTerminalModal && e.target === shipTerminalModal) {
             shipTerminalModal.style.display = 'none';
@@ -2641,6 +2920,11 @@
             currentUser = null;
             updateAuthUI();
             if (managerModal) managerModal.style.display = 'none';
+            const albumModalLogout = document.getElementById('albumModal');
+            if (albumModalLogout) {
+                albumModalLogout.style.display = 'none';
+                albumModalLogout.setAttribute('aria-hidden', 'true');
+            }
             showToast('已退出登录');
 
             // 注：这里 currentUser 已置空，不记录 logout 事件；避免污染其他用户回声
@@ -2660,14 +2944,122 @@
     if (authorFilter) authorFilter.addEventListener('change', syncFilterStateAndRender);
     if (startDateFilter) startDateFilter.addEventListener('change', syncFilterStateAndRender);
     if (endDateFilter) endDateFilter.addEventListener('change', syncFilterStateAndRender);
+    const albumViewFilter = document.getElementById('albumViewFilter');
+    if (albumViewFilter) albumViewFilter.addEventListener('change', syncFilterStateAndRender);
+
+    const photoStreamEl = document.getElementById('photoStream');
+    if (photoStreamEl) {
+        photoStreamEl.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!(t instanceof Element)) return;
+            const pin = t.closest('.photo-album-pin');
+            if (!pin) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const photoId = pin.getAttribute('data-photo-id');
+            const targetSel = document.getElementById('albumTargetSelect');
+            const albumId = targetSel ? targetSel.value : '';
+            if (!albumId) {
+                showToast('请先在筛选栏「收录到」选择专辑，或点击顶部「专辑」创建一个');
+                return;
+            }
+            const albums = loadAlbums();
+            const ix = albums.findIndex((a) => a.id === albumId);
+            if (ix === -1) {
+                showToast('目标专辑已不存在，请刷新筛选');
+                refreshAlbumFilterSelects();
+                return;
+            }
+            const pid = String(photoId || '');
+            if (!pid) return;
+            if (albums[ix].photoIds.includes(pid)) {
+                showToast('该照片已在该专辑中');
+                return;
+            }
+            albums[ix].photoIds.push(pid);
+            saveAlbums(albums);
+            showToast(`已收录到「${albums[ix].name}」`);
+            refreshAlbumFilterSelects();
+            runCruiseStreamTransition();
+        });
+    }
+
+    const albumModal = document.getElementById('albumModal');
+    const openAlbumModalBtn = document.getElementById('openAlbumModalBtn');
+    const closeAlbumModalBtn = document.getElementById('closeAlbumModalBtn');
+    const createAlbumBtn = document.getElementById('createAlbumBtn');
+    const albumNameInput = document.getElementById('albumNameInput');
+    const albumManagerList = document.getElementById('albumManagerList');
+
+    if (openAlbumModalBtn && albumModal) {
+        openAlbumModalBtn.addEventListener('click', () => {
+            renderAlbumManagerList();
+            albumModal.style.display = 'flex';
+            albumModal.setAttribute('aria-hidden', 'false');
+        });
+    }
+    if (closeAlbumModalBtn && albumModal) {
+        closeAlbumModalBtn.addEventListener('click', () => {
+            albumModal.style.display = 'none';
+            albumModal.setAttribute('aria-hidden', 'true');
+        });
+    }
+    function tryCreateAlbumFromInput() {
+        if (!albumNameInput) return;
+        const name = albumNameInput.value.trim().slice(0, 48);
+        if (!name) {
+            showToast('请输入专辑名称');
+            return;
+        }
+        const albums = loadAlbums();
+        albums.unshift({ id: newAlbumId(), name, photoIds: [] });
+        saveAlbums(albums);
+        albumNameInput.value = '';
+        renderAlbumManagerList();
+        refreshAlbumFilterSelects();
+        showToast(`已创建专辑「${name}」`);
+    }
+
+    if (createAlbumBtn && albumNameInput) {
+        createAlbumBtn.addEventListener('click', tryCreateAlbumFromInput);
+        albumNameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                tryCreateAlbumFromInput();
+            }
+        });
+    }
+    if (albumManagerList) {
+        albumManagerList.addEventListener('click', (e) => {
+            const t = e.target;
+            if (!(t instanceof Element)) return;
+            const delId = t.getAttribute('data-delete-album-id');
+            if (!delId) return;
+            const albums = loadAlbums().filter((a) => a.id !== delId);
+            saveAlbums(albums);
+            if (filterState.albumId === delId) {
+                filterState.albumId = '';
+                const vf = document.getElementById('albumViewFilter');
+                if (vf) vf.value = '';
+            }
+            renderAlbumManagerList();
+            refreshAlbumFilterSelects();
+            runCruiseStreamTransition();
+            showToast('已删除专辑');
+        });
+    }
+
     if (resetFilterBtn) {
         resetFilterBtn.addEventListener('click', () => {
             filterState.author = '';
             filterState.startDate = '';
             filterState.endDate = '';
+            filterState.albumId = '';
             if (authorFilter) authorFilter.value = '';
             if (startDateFilter) startDateFilter.value = '';
             if (endDateFilter) endDateFilter.value = '';
+            const avf = document.getElementById('albumViewFilter');
+            if (avf) avf.value = '';
             photoPagerState.page = 1;
             runCruiseStreamTransition();
         });
@@ -2724,6 +3116,7 @@
         }
         generateStars();
         refreshAuthorFilterOptions();
+        refreshAlbumFilterSelects();
         updateAuthUI();
         bootstrapSupabase();
     });
